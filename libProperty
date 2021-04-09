@@ -1,0 +1,158 @@
+#pragma once
+#include <functional>
+
+/**
+ * @brief A tempate to enable user defined getter and setter
+ * 
+ * @tparam TProperty the type of the property
+ */
+template<class TProperty>
+class Property{
+    public:
+    
+    using BaseType = TProperty; //The shortcut to TProperty in case that it's too long
+
+    /**
+     * @brief The definition of the getter class
+     * 
+     */
+    class get{
+      public:
+      friend class Property<TProperty>;
+
+        /**
+         * @brief Construct a new get object
+         * 
+         * @param func the getter function,the passed-in value is the value of this property
+         */
+        get(std::function<TProperty(TProperty &value)> func= nullptr){
+            if(!func)
+                func = [](TProperty &value)->TProperty{
+                    return value;
+                };
+            this->func = func;
+        }
+
+        std::function<TProperty(TProperty &value)> func;
+      protected:
+        
+    };
+
+    /**
+     * @brief The definition of the setter class
+     * 
+     */
+    class set{
+      public:
+      friend class Property<TProperty>;
+        
+        /**
+         * @brief Construct a new set object
+         * 
+         * @param func the setter function, the returned value will be set into the property
+         */
+        set(std::function<TProperty(TProperty value)> func= nullptr){
+             if(!func)
+                func = [](TProperty value)->TProperty{
+                    return value;
+                };
+            this->func = func;
+        }
+        std::function<TProperty(TProperty value)> func;
+      protected:
+    };
+    public:
+        explicit Property(get getter = {},set setter={},TProperty value=TProperty{}){
+            this->getter = getter;
+            this->setter = setter;
+            this->value = value;
+        }
+
+    TProperty value;
+
+    /**
+     * @brief enable inexplicit cast
+     * 
+     * @return TProperty 
+     */
+    operator TProperty(){
+        return this->getter.func(this->value);
+    }
+
+
+    /**
+     * @brief some math operators
+     * 
+     * @param value the value to operator
+     * @return TProperty 
+     */
+
+
+    TProperty operator +=(TProperty value){
+        return (*this) = (*this) + value;
+    }
+
+    TProperty operator /=(TProperty value){
+        return (*this) = (*this) / value;
+    }
+
+    TProperty operator *=(TProperty value){
+        return (*this) = (*this) * value;
+    }
+
+    TProperty operator ^=(TProperty value){
+        return (*this) = (*this) ^ value;
+    }
+
+    TProperty operator |=(TProperty value){
+        return (*this) = (*this) | value;
+    }
+
+    TProperty operator &=(TProperty value){
+        return (*this) = (*this) & value;
+    }
+
+    /**
+     * @brief get the address of the property
+     * 
+     * @return TProperty* 
+     */
+    TProperty* operator &(){
+        return &(this->value);
+    }
+
+    /**
+     * @brief get the member of the property 
+     * 
+     * @return TProperty (Must be a pointer to an object!)
+     */
+    TProperty operator ->(){
+        return (this->value);
+    }
+
+    /**
+     * @brief set the value by setter
+     * 
+     * @param value 
+     * @return TProperty 
+     */
+    TProperty operator =(TProperty value){
+        return this->value = this->setter.func(value);
+    }
+
+    
+    /**
+     * @brief Get the address of THIS object
+     * 
+     * @return Property<TProperty>* the pointer to "this"
+     */
+    Property<TProperty> * getThis(){
+        return this;
+    }
+
+    get getter;
+    set setter;
+
+    friend class set;
+    friend class get;
+};
